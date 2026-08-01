@@ -1,0 +1,371 @@
+package com.moddedmite.mitemod.veinminer.configuration;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.moddedmite.mitemod.veinminer.configuration.json.ToolStruct;
+import com.moddedmite.mitemod.veinminer.util.BlockID;
+import com.moddedmite.mitemod.veinminer.util.PreferredMode;
+import net.minecraft.Item;
+import net.minecraft.ItemAxe;
+import net.minecraft.ItemHoe;
+import net.minecraft.ItemPickaxe;
+import net.minecraft.ItemShears;
+import net.minecraft.ItemShovel;
+import net.minecraft.ItemStack;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class ConfigurationSettings {
+
+    private ConfigurationValues configValues;
+
+    public ConfigurationSettings(ConfigurationValues configValues) {
+        this.configValues = configValues;
+        autoDetectBlocksToggle = new boolean[ToolType.values().length];
+        //noinspection unchecked
+        autoDetectBlocksList = new HashSet[ToolType.values().length];
+        for (ToolType tool : ToolType.values()) {
+            autoDetectBlocksToggle[tool.ordinal()] = false;
+            autoDetectBlocksList[tool.ordinal()] = new HashSet<String>();
+        }
+        blockCongruenceList = new ArrayList<Set<BlockID>>();
+        blockCongruenceMap = new HashMap<BlockID, Integer>();
+
+        toolsAndBlocks = new HashMap<String, Tool>();
+
+        parseConfigValues();
+    }
+
+    private void parseConfigValues() {
+        try {
+            JsonObject toolsJson = configValues.toolsAndBlocks.getAsJsonObject().getAsJsonObject("tools");
+            for (Map.Entry<String, JsonElement> entry : toolsJson.entrySet()) {
+                String toolName = entry.getKey();
+                Gson gson = new Gson();
+                ToolStruct toolInstance = gson.fromJson(entry.getValue().getAsJsonObject(), ToolStruct.class);
+                if (toolInstance.name == null) toolInstance.name = toolName;
+                if (toolInstance.icon == null) toolInstance.icon = "";
+                if (toolInstance.blocklist == null) toolInstance.blocklist = new String[]{};
+                if (toolInstance.toollist == null) toolInstance.toollist = new String[]{};
+                toolsAndBlocks.put(toolName, new Tool(toolInstance));
+            }
+        } catch (Exception ignored) {
+        }
+
+        boolean defaultsAdded = false;
+        for (String defaultTool : configValues.defaultTools.keySet()) {
+            if (!toolsAndBlocks.containsKey(defaultTool)) {
+                toolsAndBlocks.put(defaultTool, configValues.defaultTools.get(defaultTool));
+                defaultsAdded = true;
+            }
+        }
+
+        for (ToolType toolType : ToolType.values()) {
+            setAutodetectBlocksToggle(toolType, configValues.toolConfig.get(toolType).autodetectToggle.value);
+            setAutodetectBlocksList(toolType, configValues.toolConfig.get(toolType).autodetectList.value);
+        }
+
+        setBlockLimit(configValues.getBlockLimit());
+        setBlocksPerTick(configValues.getBlocksPerTick());
+        setRadiusLimit(configValues.getRadiusLimit());
+
+        setBlockCongruenceList(configValues.BLOCK_EQUIVALENCY_LIST);
+        setHungerModifier(configValues.getHungerMultiplier());
+        setExperienceModifier(configValues.getExperienceMultiplier());
+
+        setEnableAllBlocks(configValues.getEnableAllBlocks());
+        setEnableAllTools(configValues.getEnableAllTools());
+
+        setPreferredMode(configValues.getClientPreferredMode(), "pressed");
+
+        if (defaultsAdded) {
+            saveConfigs();
+        }
+    }
+
+    public void reloadConfigFile() {
+        configValues.loadConfigFile();
+        parseConfigValues();
+        saveConfigs();
+    }
+
+    public boolean getEnableAllBlocks() { return enableAllBlocks; }
+    void setEnableAllBlocks(boolean enableAllBlocks) { this.enableAllBlocks = enableAllBlocks; }
+    public boolean getEnableAllTools() { return enableAllTools; }
+    void setEnableAllTools(boolean enableAllTools) { this.enableAllTools = enableAllTools; }
+
+    private boolean[] autoDetectBlocksToggle;
+    private HashSet<String>[] autoDetectBlocksList;
+    private ArrayList<Set<BlockID>> blockCongruenceList;
+    private HashMap<BlockID, Integer> blockCongruenceMap;
+    private int blockLimit;
+    private int radiusLimit;
+    private int blocksPerTick;
+    private boolean enableAllBlocks;
+    private boolean enableAllTools;
+    private int preferredMode;
+    private Map<String, Tool> toolsAndBlocks;
+    private int hungerModifier;
+    private int experienceModifier;
+
+    void setAutodetectBlocksToggle(ToolType tool, boolean value) { autoDetectBlocksToggle[tool.ordinal()] = value; }
+    public boolean getAutodetectBlocksToggle(ToolType tool) { return autoDetectBlocksToggle[tool.ordinal()]; }
+    void setAutodetectBlocksList(ToolType tool, String list) {
+        String[] parts = list.split(",");
+        for (String part : parts) {
+            if (!part.isEmpty()) autoDetectBlocksList[tool.ordinal()].add(part);
+        }
+    }
+    public Set<String> getAutodetectBlocksList(ToolType tool) { return autoDetectBlocksList[tool.ordinal()]; }
+
+    public void addToolType(String newType, String name, String icon) {
+        if (!newType.isEmpty() && !toolsAndBlocks.containsKey(newType)) {
+            Tool newTool = new Tool(name, icon, new String[]{}, new String[]{});
+            toolsAndBlocks.put(newType, newTool);
+        }
+    }
+
+    public void addBlockToWhitelist(String tool, BlockID block) {
+        if (!block.name.isEmpty() && toolsAndBlocks.containsKey(tool)) {
+            BlockID testBlock = new BlockID(block.name, -1);
+            if (!toolsAndBlocks.get(tool).blocklist.contains(block) && !toolsAndBlocks.get(tool).blocklist.contains(testBlock)) {
+                block.metadata = block.metadata == -1 ? -1 : block.metadata;
+                toolsAndBlocks.put(tool, toolsAndBlocks.get(tool).addBlock(block));
+            }
+        }
+    }
+
+    public void removeBlockFromWhitelist(String tool, BlockID block) {
+        if (!toolsAndBlocks.containsKey(tool)) return;
+        BlockID blockNoMeta = new BlockID(block.name, block.metadata);
+        blockNoMeta.metadata = -1;
+        if (toolsAndBlocks.get(tool).blocklist.contains(block)) {
+            toolsAndBlocks.put(tool, toolsAndBlocks.get(tool).removeBlock(block));
+        } else if (toolsAndBlocks.get(tool).blocklist.contains(blockNoMeta)) {
+            toolsAndBlocks.put(tool, toolsAndBlocks.get(tool).removeBlock(blockNoMeta));
+        }
+    }
+
+    public ArrayList<String> getBlockIDArray(String toolType) {
+        ArrayList<String> output = new ArrayList<String>();
+        if (toolsAndBlocks.containsKey(toolType)) {
+            for (BlockID blockID : toolsAndBlocks.get(toolType).blocklist) {
+                output.add(blockID.toString());
+            }
+        }
+        return output;
+    }
+
+    public boolean whiteListHasBlockId(String tool, BlockID targetBlock) {
+        if (!toolsAndBlocks.containsKey(tool)) return false;
+        BlockID targetBlockNoMeta = new BlockID(targetBlock.name, targetBlock.metadata);
+        targetBlockNoMeta.metadata = -1;
+        return toolsAndBlocks.get(tool).blocklist.contains(targetBlock) || toolsAndBlocks.get(tool).blocklist.contains(targetBlockNoMeta);
+    }
+
+    public void addCongruentBlocks(String existingBlock, String newBlock) {
+        setBlockCongruenceList(String.format("%s=%s", existingBlock, newBlock));
+    }
+
+    void setBlockCongruenceList(String congruenceList) {
+        String[] blocksString = congruenceList.split(",");
+        for (String congruentBlocks : blocksString) {
+            int newId = blockCongruenceList.size();
+            Set<BlockID> newCongruentBlocks = new HashSet<BlockID>();
+            if (!congruentBlocks.contains("=")) continue;
+            for (String blockString : congruentBlocks.split("=")) {
+                BlockID newBlockId = new BlockID(blockString);
+                newCongruentBlocks.add(newBlockId);
+                if (blockCongruenceMap.containsKey(newBlockId)) {
+                    newId = blockCongruenceMap.get(newBlockId);
+                }
+                blockCongruenceMap.put(newBlockId, newId);
+            }
+            newCongruentBlocks.addAll(newCongruentBlocks);
+            if (newId < blockCongruenceList.size()) {
+                blockCongruenceList.get(newId).addAll(newCongruentBlocks);
+            } else {
+                blockCongruenceList.add(newId, newCongruentBlocks);
+            }
+        }
+    }
+
+    public String getBlockCongruenceList() {
+        StringBuilder sb = new StringBuilder();
+        for (Set<BlockID> group : blockCongruenceList) {
+            if (sb.length() > 0) sb.append(",");
+            boolean first = true;
+            for (BlockID b : group) {
+                if (!first) sb.append("=");
+                sb.append(b.toString());
+                first = false;
+            }
+        }
+        return sb.toString();
+    }
+
+    public boolean areBlocksCongruent(BlockID block1, BlockID block2) {
+        BlockID block1NoMeta = new BlockID(block1.name, block1.metadata);
+        block1NoMeta.metadata = -1;
+        BlockID block2NoMeta = new BlockID(block2.name, block2.metadata);
+        block2NoMeta.metadata = -1;
+
+        int targetBlock1;
+        int targetBlock2;
+        if (blockCongruenceMap.containsKey(block1) || blockCongruenceMap.containsKey(block1NoMeta)) {
+            targetBlock1 = blockCongruenceMap.containsKey(block1) ? blockCongruenceMap.get(block1) : blockCongruenceMap.get(block1NoMeta);
+        } else {
+            return false;
+        }
+        if (blockCongruenceMap.containsKey(block2) || blockCongruenceMap.containsKey(block2NoMeta)) {
+            targetBlock2 = blockCongruenceMap.containsKey(block2) ? blockCongruenceMap.get(block2) : blockCongruenceMap.get(block2NoMeta);
+        } else {
+            return false;
+        }
+        return targetBlock1 == targetBlock2;
+    }
+
+    public void addTool(String tool, String name) {
+        if (toolsAndBlocks.containsKey(tool)) {
+            toolsAndBlocks.put(tool, toolsAndBlocks.get(tool).addTool(name));
+        }
+    }
+
+    public void removeTool(String tool, String name) {
+        if (toolsAndBlocks.containsKey(tool)) {
+            toolsAndBlocks.put(tool, toolsAndBlocks.get(tool).removeTool(name));
+        }
+    }
+
+    public Set<String> getToolTypeNames() { return toolsAndBlocks.keySet(); }
+    public String getToolTypeName(String toolType) { return toolsAndBlocks.containsKey(toolType) ? toolsAndBlocks.get(toolType).name : ""; }
+    public String getToolTypeIcon(String toolType) { return toolsAndBlocks.containsKey(toolType) ? toolsAndBlocks.get(toolType).icon : ""; }
+    public ArrayList<String> getToolIdArray(String tool) { return new ArrayList<String>(toolsAndBlocks.containsKey(tool) ? toolsAndBlocks.get(tool).toollist : new HashSet<String>()); }
+
+    public int getBlockLimit() { return blockLimit; }
+    public void setBlockLimit(int blockLimit) {
+        if (blockLimit < -1) blockLimit = -1;
+        this.blockLimit = blockLimit;
+    }
+    public int getRadiusLimit() { return radiusLimit; }
+    public void setRadiusLimit(int radiusLimit) {
+        if (radiusLimit < -1) radiusLimit = -1;
+        else if (radiusLimit > 1000) radiusLimit = 1000;
+        this.radiusLimit = radiusLimit;
+    }
+    public int getBlocksPerTick() { return blocksPerTick; }
+    public void setBlocksPerTick(int blocksPerTick) {
+        if (blocksPerTick < -1) blocksPerTick = -1;
+        else if (blocksPerTick > 1000) blocksPerTick = 100;
+        this.blocksPerTick = blocksPerTick;
+    }
+
+    public int getHungerMultiplier() { return hungerModifier; }
+    public void setHungerModifier(int hungerModifier) { this.hungerModifier = hungerModifier < 0 ? 0 : hungerModifier; }
+    public int getExperienceMultiplier() { return experienceModifier; }
+    public void setExperienceModifier(int experienceModifier) { this.experienceModifier = experienceModifier < 0 ? 0 : experienceModifier; }
+
+    /**
+     * Checks if a tool is of the given type. First checks the configured toollist
+     * (item id strings), then falls back to instanceof checks for MITE tool classes.
+     */
+    public boolean toolIsOfType(ItemStack tool, String type) {
+        if (tool == null) {
+            // open hand: only allowed if toollist empty for type or enableAllTools
+            return toolsAndBlocks.containsKey(type) && toolsAndBlocks.get(type).toollist.isEmpty();
+        }
+        Item item = tool.getItem();
+        String itemId = String.valueOf(item.itemID);
+        if (toolsAndBlocks.containsKey(type) && toolsAndBlocks.get(type).toollist.contains(itemId)) {
+            return true;
+        }
+        // Fallback: detect by MITE tool class when toollist is empty (auto-detect defaults).
+        if (toolsAndBlocks.containsKey(type) && toolsAndBlocks.get(type).toollist.isEmpty()) {
+            switch (type) {
+                case "axe": return item instanceof ItemAxe;
+                case "hoe": return item instanceof ItemHoe;
+                case "pickaxe": return item instanceof ItemPickaxe;
+                case "shears": return item instanceof ItemShears;
+                case "shovel": return item instanceof ItemShovel;
+            }
+        }
+        return false;
+    }
+
+    boolean setPreferredMode(String modeString, String fallback) {
+        if ("disabled".equals(modeString)) { preferredMode = PreferredMode.DISABLED; return true; }
+        else if ("pressed".equals(modeString)) { preferredMode = PreferredMode.PRESSED; return true; }
+        else if ("released".equals(modeString)) { preferredMode = PreferredMode.RELEASED; return true; }
+        else if ("sneak".equals(modeString)) { preferredMode = PreferredMode.SNEAK_ACTIVE; return true; }
+        else if ("no_sneak".equals(modeString)) { preferredMode = PreferredMode.SNEAK_INACTIVE; return true; }
+        if (fallback != null) setPreferredMode(fallback, null);
+        return false;
+    }
+
+    public void setPreferredMode(int mode) { preferredMode = mode; }
+    public int getPreferredMode() { return preferredMode; }
+
+    public String getPreferredModeString() {
+        switch (preferredMode) {
+            case PreferredMode.DISABLED: return "disabled";
+            case PreferredMode.PRESSED: return "pressed";
+            case PreferredMode.RELEASED: return "released";
+            case PreferredMode.SNEAK_ACTIVE: return "sneak";
+            case PreferredMode.SNEAK_INACTIVE: return "no_sneak";
+        }
+        return "";
+    }
+
+    public void saveConfigs() {
+        configValues.toolsAndBlocks = getToolsAndBlocksJson();
+        configValues.setBlockLimit(getBlockLimit());
+        configValues.setBlocksPerTick(getBlocksPerTick());
+        configValues.setRadiusLimit(getRadiusLimit());
+        configValues.BLOCK_EQUIVALENCY_LIST = getBlockCongruenceList();
+        configValues.setHungerMultiplier(getHungerMultiplier());
+        configValues.setExperienceMultiplier(getExperienceMultiplier());
+        configValues.setEnableAllBlocks(getEnableAllBlocks());
+        configValues.setEnableAllTools(getEnableAllTools());
+        configValues.setClientPreferredMode(getPreferredModeString());
+        configValues.saveConfigFile();
+    }
+
+    public JsonObject getToolsAndBlocksJson() {
+        JsonObject jsonTools = new JsonObject();
+        List<String> sortedToolNames = new ArrayList<String>(toolsAndBlocks.keySet());
+        Collections.sort(sortedToolNames);
+        for (String toolName : sortedToolNames) {
+            Tool tool = toolsAndBlocks.get(toolName);
+            JsonArray toolList = new JsonArray();
+            List<String> sortedToolList = new ArrayList<String>(tool.toollist);
+            Collections.sort(sortedToolList);
+            for (String whiteListTool : sortedToolList) {
+                toolList.add(new JsonPrimitive(whiteListTool));
+            }
+            JsonArray blockList = new JsonArray();
+            List<BlockID> sortedBlockList = new ArrayList<BlockID>(tool.blocklist);
+            Collections.sort(sortedBlockList);
+            for (BlockID whitelistBlock : sortedBlockList) {
+                blockList.add(new JsonPrimitive(whitelistBlock.toString()));
+            }
+            JsonObject jsonTool = new JsonObject();
+            jsonTool.add("name", new JsonPrimitive(tool.name));
+            jsonTool.add("icon", new JsonPrimitive(tool.icon));
+            jsonTool.add("toollist", toolList);
+            jsonTool.add("blocklist", blockList);
+            jsonTools.add(toolName, jsonTool);
+        }
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("tools", jsonTools);
+        return jsonObject;
+    }
+}

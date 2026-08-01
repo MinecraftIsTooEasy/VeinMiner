@@ -1,0 +1,97 @@
+# Command usage/error
+command.veinminer=/veinminer mode/blocklist/toollist/blocklimit/radius/per_tick/saveconfig/reloadconfig/help
+command.veinminer.enable=/veinminer mode auto/sneak/no_sneak
+command.veinminer.blocklist=/veinminer blocklist %s add/remove <方块 id> <元数据>
+command.veinminer.toollist=/veinminer toollist %s add/remove <工具 id>
+command.veinminerc=/veinminerc disabled/pressed/released/sneak/no_sneak
+
+command.veinminer.hasclient=你的客户端似乎安装有 Veinminer. 请使用 /veinminerc 指令
+
+# Client command usage
+command.veinminerc.set.disabled=已禁用客户端 Veinminer 的热键
+command.veinminerc.set.pressed=已设置客户端 Veinminer 的热键为按下时启用
+command.veinminerc.set.released=已设置客户端 Veinminer 的热键为按下时不启用
+
+# Command result/Mode status
+command.veinminer.set.disable=已禁用 VeinMiner
+command.veinminer.set.auto=已设置 VeinMiner 为热键模式
+command.veinminer.set.sneak=已设置 VeinMiner 为潜行模式
+command.veinminer.set.nosneak=已设置 VeinMiner 为非潜行模式
+
+# Command blocklist
+command.veinminer.blocklist.actionerror=/veinminer blocklist %s add/remove <方块 id> <元数据>
+command.veinminer.blocklist.itemerror=/veinminer blocklist %s %s  <方块 id> <元数据>
+command.veinminer.blocklist.add=已将 %s/%d 添加到 %s 方块列表中
+command.veinminer.blocklist.remove=已将 %s/%d 从 %s 方块列表中删除
+
+# Command toollist
+command.veinminer.toollist.actionerror=/veinminer toollist %s add/remove <工具 id>
+command.veinminer.toollist.itemerror=/veinminer toollist %s %s <工具 id>
+command.veinminer.toollist.add=已将 %s 添加到 %s 工具列表中
+command.veinminer.toollist.remove=已将 %s 从 %s 工具列表中删除
+
+command.veinminer.blocklimit=/veinminer blocklimit [-1 - 2147483647]
+command.veinminer.blocklimit.set=已设置破坏方块的最大数量为 %d 个方块
+command.veinminer.range=/veinminer radius [-1 - 1000]
+command.veinminer.range.set=已设置破坏方块的最大半径为 %d 个方块
+command.veinminer.pertick=/veinminer per_tick <# 每 tick 破坏的方块数>
+command.veinminer.pertick.set=已设置破坏方块的速度为每 tick %d 个方块
+
+command.veinminer.saveconfig=已将设置保存到配置文件
+command.veinminer.loadconfig=已从配置文件重新载入设置
+
+command.veinminer.cannotuse=非玩家不能使用 VeinMiner 指令
+command.veinminer.permissionDenied=你没有权限使用该指令
+
+# Preferred mode confirmation
+mod.veinminer.preferredmode.auto=VeinMiner 正使用热键模式, 详情请查看配置项
+mod.veinminer.preferredmode.sneak=VeinMiner 正使用潜行模式
+mod.veinminer.preferredmode.nosneak=VeinMiner 正使用非潜行模式
+
+mod.veinminer.finished.tooHungry=你的饥饿值不足以使用 VeinMiner
+mod.veinminer.finished.noExp=你的经验值不足以使用 VeinMiner
+
+# Controls
+veinminer.key.category=VeinMiner
+veinminer.key.enable=启用 VeinMiner
+
+# Command help.
+command.veinminer.help1=可用指令参数:
+command.veinminer.help2='mode': 切换 VeinMiner 模式
+command.veinminer.help3='blocklist': 向方块列表添加或删除方块
+command.veinminer.help4='toollist': 向工具列表添加或删除方块
+command.veinminer.help5='blocklimit': 设置 VeinMiner 破坏方块的最大数量
+command.veinminer.help6='radius': 设置 VeinMiner 破坏方块的最大半径
+command.veinminer.help7='per_tick': 设置 VeinMiner 破坏方块的速度
+command.veinminer.help8='saveconfig': 保存设置到配置文件
+command.veinminer.help9='reloadconfig': 从配置文件载入设置
+command.veinminer.help.enable1=可选模式:
+command.veinminer.help.enable2='auto': 热键模式 (服务端: 当客户端没有本模组时无效)
+command.veinminer.help.enable3='sneak': 潜行模式
+command.veinminer.help.enable4='no_sneak': 非潜行模式
+
+# ManyLib config
+config.name.veinminer.limit.blocks=最大方块数
+config.comment.veinminer.limit.blocks=单次连矿破坏方块的最大数量 (-1=无限)
+config.name.veinminer.limit.radius=最大半径
+config.comment.veinminer.limit.radius=连矿从起始方块开始的最大半径 (-1=无限)
+config.name.veinminer.limit.blocksPerTick=每 tick 方块数
+config.comment.veinminer.limit.blocksPerTick=每 tick 破坏方块的速度
+config.name.veinminer.hungermodifier=饥饿倍率
+config.comment.veinminer.hungermodifier=每次破坏方块消耗的饥饿值倍率 (0=不消耗)
+config.name.veinminer.expmodifier=经验消耗
+config.comment.veinminer.expmodifier=每次破坏方块消耗的经验值 (0=不消耗)
+config.name.veinminer.override.allBlocks=允许所有方块
+config.comment.veinminer.override.allBlocks=允许任何方块被连矿 (无视方块白名单)
+config.name.veinminer.override.allTools=允许所有工具
+config.comment.veinminer.override.allTools=允许任何工具触发连矿 (包括空手)
+config.name.veinminer.client.preferredMode=客户端模式
+config.comment.veinminer.client.preferredMode=客户端 VeinMiner 的激活模式
+config.enum.veinminer.client.preferredMode.DISABLED=禁用
+config.enum.veinminer.client.preferredMode.PRESSED=按下热键时
+config.enum.veinminer.client.preferredMode.RELEASED=释放热键时
+config.enum.veinminer.client.preferredMode.SNEAK_ACTIVE=潜行时
+config.enum.veinminer.client.preferredMode.SNEAK_INACTIVE=非潜行时
+config.tab.generic=通用
+config.tab.hotkey=热键
+config.menu.comment.veinminer=VeinMiner 连锁挖矿配置
