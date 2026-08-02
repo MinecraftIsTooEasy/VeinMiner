@@ -1,6 +1,7 @@
 package com.moddedmite.mitemod.veinminer.network;
 
 import com.moddedmite.mitemod.veinminer.VeinMiner;
+import com.moddedmite.mitemod.veinminer.configuration.VeinMinerConfigs;
 import com.moddedmite.mitemod.veinminer.lib.ModInfo;
 import com.moddedmite.mitemod.veinminer.lib.MinerLogger;
 import com.moddedmite.mitemod.veinminer.server.MinerServer;
@@ -55,18 +56,22 @@ public class PacketClientPresent implements Packet {
         MinerServer minerServer = VeinMiner.instance.minerServer;
         if (minerServer == null) return;
         minerServer.addClientPlayer(playerName);
+        boolean showLoginMessage = VeinMinerConfigs.showLoginMessage.getBooleanValue();
         switch (this.mode) {
             case 3:
                 minerServer.setPlayerStatus(playerName, PlayerStatus.SNEAK_ACTIVE);
-                serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.sneak"));
+                if (showLoginMessage)
+                    serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.sneak"));
                 break;
             case 4:
                 minerServer.setPlayerStatus(playerName, PlayerStatus.SNEAK_INACTIVE);
-                serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.nosneak"));
+                if (showLoginMessage)
+                    serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.nosneak"));
                 break;
             case 1:
             case 2:
-                serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.auto"));
+                if (showLoginMessage)
+                    serverPlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey("mod.veinminer.preferredmode.auto"));
             default:
                 minerServer.setPlayerStatus(playerName, PlayerStatus.INACTIVE);
         }

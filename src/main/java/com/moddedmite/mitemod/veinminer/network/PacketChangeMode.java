@@ -1,6 +1,7 @@
 package com.moddedmite.mitemod.veinminer.network;
 
 import com.moddedmite.mitemod.veinminer.VeinMiner;
+import com.moddedmite.mitemod.veinminer.configuration.VeinMinerConfigs;
 import com.moddedmite.mitemod.veinminer.lib.ModInfo;
 import com.moddedmite.mitemod.veinminer.server.MinerServer;
 import com.moddedmite.mitemod.veinminer.util.PlayerStatus;
@@ -95,7 +96,9 @@ public class PacketChangeMode implements Packet {
                     key = "command.veinminerc.set.disabled";
                     break;
             }
-            Minecraft.getMinecraft().thePlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey(key));
+            if (VeinMinerConfigs.showLoginMessage.getBooleanValue()) {
+                Minecraft.getMinecraft().thePlayer.sendChatToPlayer(ChatMessageComponent.createFromTranslationKey(key));
+            }
         }
     }
 

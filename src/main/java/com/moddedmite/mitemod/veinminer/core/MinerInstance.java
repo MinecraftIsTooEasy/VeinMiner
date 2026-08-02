@@ -109,7 +109,7 @@ public class MinerInstance {
         }
 
         net.minecraft.FoodStats food = player.getFoodStats();
-        if (food.getSatiation() < MIN_HUNGER) {
+        if (food.getNutrition() <= 0) {
             this.finished = true;
             sendFinishedMessage("mod.veinminer.finished.tooHungry");
         }
@@ -153,8 +153,11 @@ public class MinerInstance {
 
     private void takeHunger() {
         float hungerMod = ((float) serverInstance.getConfigurationSettings().getHungerMultiplier()) * 0.025F;
-        net.minecraft.FoodStats s = player.getFoodStats();
-        s.addHungerServerSide(hungerMod);
+        if (hungerMod <= 0) return;
+        net.minecraft.FoodStats food = player.getFoodStats();
+        // TODO: consume saturation first, then satiation
+        // Waiting on FoodStats method names (see debugFoodStats in VeinMiner.java)
+        food.addHungerServerSide(hungerMod);
     }
 
     private void takeExperience() {

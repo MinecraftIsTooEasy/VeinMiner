@@ -40,6 +40,8 @@ public class VeinMinerConfigs extends SimpleConfigs {
             "veinminer.override.allTools");
     public static final ConfigEnum<PreferredModeEnum> preferredMode = ConfigFactory.ofEnum(
             "veinminer.client.preferredMode", PreferredModeEnum.PRESSED);
+    public static final ConfigBoolean showLoginMessage = ConfigFactory.ofBoolean(
+            "veinminer.client.showLoginMessage", "true");
 
     private static final List<ConfigBase<?>> VALUES = buildValues();
 
@@ -53,6 +55,7 @@ public class VeinMinerConfigs extends SimpleConfigs {
         list.add(enableAllBlocks);
         list.add(enableAllTools);
         list.add(preferredMode);
+        list.add(showLoginMessage);
         return list;
     }
 
