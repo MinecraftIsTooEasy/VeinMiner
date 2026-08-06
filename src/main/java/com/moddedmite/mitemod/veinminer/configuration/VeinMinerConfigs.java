@@ -31,7 +31,7 @@ public class VeinMinerConfigs extends SimpleConfigs {
     public static final ConfigInteger blocksPerTick = ConfigFactory.ofInteger(
             "veinminer.limit.blocksPerTick", 10, 1, 100);
     public static final ConfigInteger hungerMultiplier = ConfigFactory.ofInteger(
-            "veinminer.hungermodifier", 0, 0, 100);
+            "veinminer.hungermodifier", 100, 0, 100);
     public static final ConfigInteger experienceMultiplier = ConfigFactory.ofInteger(
             "veinminer.expmodifier", 0, 0, Integer.MAX_VALUE);
     public static final ConfigBoolean enableAllBlocks = ConfigFactory.ofBoolean(

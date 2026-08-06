@@ -68,9 +68,6 @@ public class VeinMiner implements ModInitializer {
         instance = this;
         logger = LogUtil.getLogger();
 
-        // Debug: print FoodStats methods and fields for MITE compatibility
-        debugFoodStats();
-
         setupClientProxy();
 
         // Initialise and register ManyLib-backed config (config/veinminer.json).
@@ -157,27 +154,6 @@ public class VeinMiner implements ModInitializer {
                 event.register(new ClientCommand());
             }
         });
-    }
-
-    private void debugFoodStats() {
-        try {
-            logger.info("=== VeinMiner Debug: FoodStats methods ===");
-            for (java.lang.reflect.Method m : net.minecraft.FoodStats.class.getDeclaredMethods()) {
-                StringBuilder params = new StringBuilder();
-                for (Class<?> p : m.getParameterTypes()) {
-                    if (params.length() > 0) params.append(", ");
-                    params.append(p.getSimpleName());
-                }
-                logger.info("  " + m.getReturnType().getSimpleName() + " " + m.getName() + "(" + params + ")");
-            }
-            logger.info("=== VeinMiner Debug: FoodStats fields ===");
-            for (java.lang.reflect.Field f : net.minecraft.FoodStats.class.getDeclaredFields()) {
-                logger.info("  " + f.getType().getSimpleName() + " " + f.getName());
-            }
-            logger.info("=== VeinMiner Debug: FoodStats done ===");
-        } catch (Exception e) {
-            logger.error("Failed to list FoodStats members", e);
-        }
     }
 
     private void setupClientProxy() {

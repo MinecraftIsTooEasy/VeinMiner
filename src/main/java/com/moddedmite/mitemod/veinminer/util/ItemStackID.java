@@ -6,20 +6,29 @@ import net.minecraft.ItemStack;
 public class ItemStackID {
     private String itemId;
     private int damage;
+    private int subtype;
     private int maxStackSize;
 
-    public ItemStackID(String id, int dam, int stackSize) {
+    public ItemStackID(String id, int dam, int sub, int stackSize) {
         itemId = id;
         damage = dam;
+        subtype = sub;
         maxStackSize = stackSize;
     }
 
+    public ItemStackID(String id, int dam, int stackSize) {
+        this(id, dam, 0, stackSize);
+    }
+
     public ItemStackID(Item item, int damage, int stackSize) {
-        this(String.valueOf(item.itemID), damage, stackSize);
+        this(String.valueOf(item.itemID), damage, 0, stackSize);
     }
 
     public ItemStackID(ItemStack stack) {
-        this(stack.getItem(), stack.getItemDamage(), stack.getMaxStackSize());
+        this(String.valueOf(stack.getItem().itemID),
+                stack.getItemDamage(),
+                stack.getItemSubtype(),
+                stack.getMaxStackSize());
     }
 
     public String getItemId() {
@@ -28,6 +37,10 @@ public class ItemStackID {
 
     public int getDamage() {
         return damage;
+    }
+
+    public int getSubtype() {
+        return subtype;
     }
 
     public int getMaxStackSize() {
@@ -48,6 +61,7 @@ public class ItemStackID {
         int output = 0;
         output += itemId.hashCode() << 16;
         output += damage;
+        output += subtype << 8;
         return output;
     }
 
@@ -57,6 +71,6 @@ public class ItemStackID {
         if (obj == this) return true;
         if (!(obj instanceof ItemStackID)) return false;
         ItemStackID rhs = (ItemStackID) obj;
-        return (itemId.equals(rhs.itemId) && damage == rhs.damage);
+        return (itemId.equals(rhs.itemId) && damage == rhs.damage && subtype == rhs.subtype);
     }
 }

@@ -285,17 +285,19 @@ public class MinerInstance {
                 continue;
             }
             int itemDamage = itemStack.getDamage();
+            int itemSubtype = itemStack.getSubtype();
             int numItems = schedDrop.getValue();
             int max = itemStack.getMaxStackSize();
             if (max <= 0) max = 64;
             while (numItems > max) {
                 ItemStack newItemStack = new ItemStack(foundItem, max, itemDamage);
+                newItemStack.setItemSubtype(itemSubtype);
                 EntityItem newEntityItem = new EntityItem(world, initalBlock.getX() + 0.5F, initalBlock.getY() + 0.5F, initalBlock.getZ() + 0.5F, newItemStack);
                 world.spawnEntityInWorld(newEntityItem);
                 numItems -= max;
             }
             ItemStack newItemStack = new ItemStack(foundItem, numItems, itemDamage);
-            newItemStack.setItemDamage(itemDamage);
+            newItemStack.setItemSubtype(itemSubtype);
             EntityItem newEntityItem = new EntityItem(world, initalBlock.getX() + 0.5F, initalBlock.getY() + 0.5F, initalBlock.getZ() + 0.5F, newItemStack);
             world.spawnEntityInWorld(newEntityItem);
         }
